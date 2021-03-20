@@ -7,7 +7,7 @@ const app = new koa();
  */
 
 // log req
-app.use(require('./middleware/responseTIme'));
+app.use(require('./middleware/responseTime'));
 
 
 /**
