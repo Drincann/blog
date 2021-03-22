@@ -11,7 +11,9 @@
   "license": "ISC",
   "dependencies": {
     "etag": "^1.8.1",
+    "graphql": "^15.5.0",
     "koa": "^2.13.1",
+    "mongodb": "^3.6.5",
     "resolve-path": "^1.4.0"
   },
   "devDependencies": {
