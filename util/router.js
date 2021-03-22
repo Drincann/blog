@@ -21,11 +21,10 @@ class Router {
                 }
             } else if (ctx.method == 'POST') {
                 if (this.postRouteMap.has(ctx.url)) {
-                    ctx.request.body = (1);
                     return await this.postRouteMap.get(ctx.url)(ctx, next);
                 }
             }
-            next();
+            await next();
         }).bind(this);
     }
 }
