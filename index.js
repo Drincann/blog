@@ -1,3 +1,4 @@
+
 const koa = require('koa');
 const log = require('./util/logger')
 const app = new koa();
@@ -25,8 +26,9 @@ app.use(require('./util/static')('./public', {
 // bodyParser
 app.use(require('./util/bodyParser')());
 
+
 // graphQL interface
-app.use(require('./route/graphQL'));
+app.use(require('./middleware/graphQL'));
 
 // 404
 app.use((ctx) => {
