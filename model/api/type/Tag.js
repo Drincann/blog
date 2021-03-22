@@ -8,15 +8,11 @@ const Tag = new GraphQLObjectType({
     fields: {
         tagId: {
             type: GraphQLString,
-            resolve(source) {
-                return source._id;
-            }
+            resolve: (source) => source._id
         },
         name: {
             type: GraphQLString,
-            resolve(source) {
-                return source.name;
-            }
+            resolve: (source) => source.name
         }
     }
 });

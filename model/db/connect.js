@@ -12,22 +12,24 @@ module.exports = (dbUrl, callback) => {
 
     // Connect to the Server
     client.connect(callback ?? undefined);
-    return client;
+
     //  todo 删掉这里
-    // async () => {
-    //     this.collection = client.db().collection();
-    //     let name;
-    //     this.collection.find().toArray()
-    //     const result = await this.collection.updateOne({},)
-    //     result.modifiedCount
-    //     return Promise((resolve, reject) => {
-    //         this.collection.insertOne({ name }, (err, result) => {
-    //             if (err) {
-    //                 reject(err);
-    //             }
-    //             resolve(result.insertedId)
-    //         });
-    //     });
-    // }
+    async () => {
+        this.collection = client.db().collection();
+        let name;
+        this.collection.insertMany({})
+        const result = await this.collection.updateOne({},)
+        result.modifiedCount
+        return Promise((resolve, reject) => {
+            this.collection.insertOne({ name }, (err, result) => {
+                if (err) {
+                    reject(err);
+                }
+                resolve(result.insertedId)
+            });
+        });
+    }
+
+    return client;
 };
 

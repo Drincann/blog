@@ -14,17 +14,13 @@ const client = require('./connect')(dbUrl, err => {
 const db = client.db(dbName);
 
 // collection
-const Tag = require('./Tag');
-const Article = require('./Article');
-const Config = require('./Config');
-const ArticleToTag = require('./ArticleToTag');
-
-// instance
-const tags = new Tag(db);
-const articles = new Article(db);
-const configs = new Config(db);
-const articlesToTags = new ArticleToTag(db);
+const collections = {
+    tagCollection: db.collection('Tag'),
+    articleCollection: db.collection('Article'),
+    configCollection: db.collection('Config'),
+    articlesToTagsCollection: db.collection('ArticleToTag')
+}
 
 module.exports = {
-    tags, articles, configs, articlesToTags
+    client, db, collections
 };

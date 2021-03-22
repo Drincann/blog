@@ -8,21 +8,15 @@ const Config = new GraphQLObjectType({
     fields: {
         name: {
             type: GraphQLString,
-            resolve(source, args, context, info) {
-                source.name;
-            }
+            resolve: (source) => source.name
         },
         avatar: {
             type: GraphQLString,
-            resolve(source, args, context, info) {
-                source.avatar;
-            }
+            resolve: (source) => source.avatar
         },
         password: {
             type: GraphQLString,
-            resolve(source, args, context, info) {
-                source.password;
-            }
+            resolve: (source) => source.password
         }
     }
 });

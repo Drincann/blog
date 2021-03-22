@@ -1,7 +1,9 @@
-
 const koa = require('koa');
 const log = require('./util/logger')
 const app = new koa();
+
+// util
+require('./util/objectRemoveNull');
 
 /**
  * env
