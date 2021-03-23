@@ -4,4 +4,5 @@ Object.prototype.removeNull = function () {
             delete this[key];
         }
     }
+    return this;
 };

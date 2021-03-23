@@ -6,7 +6,7 @@ const {
 const Tag = new GraphQLObjectType({
     name: 'Tag',
     fields: {
-        tagId: {
+        _id: {
             type: GraphQLString,
             resolve: (source) => source._id
         },

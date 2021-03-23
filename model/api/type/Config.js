@@ -16,7 +16,7 @@ const Config = new GraphQLObjectType({
         },
         password: {
             type: GraphQLString,
-            resolve: (source) => source.password
+            resolve: (source, args, ctx) => source.password
         }
     }
 });

@@ -11,6 +11,10 @@ const TagType = require('./Tag');
 const Article = new GraphQLObjectType({
     name: 'Article',
     fields: {
+        _id: {
+            type: GraphQLString,
+            resolve: (source) => source._id,
+        },
         title: {
             type: GraphQLString,
             resolve: (source) => source.title,
@@ -34,7 +38,6 @@ const Article = new GraphQLObjectType({
 
                 // 连表查询
                 // 找到该文章的 tagId 列表
-                const r = (await articlesToTags.find({ article: ObjectId(_id) }).toArray());
                 return (await articlesToTags.find({ article: ObjectId(_id) }).toArray())
                     // 对每个 tagId 查询 name
                     .map(async ({ tag }) => (await tags.findOne({ _id: tag })));

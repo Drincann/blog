@@ -21,6 +21,11 @@ const collections = {
     articlesToTagsCollection: db.collection('ArticleToTag')
 }
 
+// init
+collections.articleCollection.createIndex(
+    { title: 'text', content: 'text' }
+)
+
 module.exports = {
     client, db, collections
 };

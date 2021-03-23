@@ -5,6 +5,7 @@ const {
 } = require('graphql');
 
 const TagType = require('./type/Tag');
+const ConfigType = require('./type/Config');
 const ArticleType = require('./type/Article');
 // const ConfigType = require('./type/Config');
 
@@ -23,16 +24,25 @@ module.exports = new GraphQLObjectType({
         article: {
             type: ArticleType,
             args: {
-                articleId: { type: GraphQLString },
+                _id: { type: GraphQLString },
+                // todo text search
                 text: { type: GraphQLString },
                 tagId: { type: GraphQLString },
                 tagName: { type: GraphQLString }
             },
-            resolve: async (source, { articleId, text, tagId, tagName }) => {
-                if (articleId) {
-                    return await articles.findOne({ _id: ObjectId(articleId) });
-                } else if (tagId || tagName || text) {
-                    // 根据 tag text 找文章
+            resolve: async (source, { _id, text, tagId, tagName }) => {
+                // 依次添加 condition，最后统一检索
+                const condition = {};
+
+                if (_id) {
+                    condition._id = ObjectId(_id);
+                }
+
+                if (text) {
+                    condition.$text = { $search: text };
+                }
+
+                if (tagId || tagName) {
                     const tagCondition = {};
                     if (tagId) {
                         tagCondition._id = tagId;
@@ -41,31 +51,38 @@ module.exports = new GraphQLObjectType({
                         tagCondition.name = tagName;
                     }
 
-                    const tag = await tags.findOne(tagCondition);
-                    if (tag) {
-                        return (await Promise.all((await articlesToTags.find({ tag: ObjectId(tag._id) }).limit(1).toArray())
-                            .map(async ({ article }) => await articles.findOne({ _id: ObjectId(article), $text: { $search: text } }))))
-                            .filter(isNotNull => isNotNull);
+                    const articleIdArrSet = await Promise.all((await tags.find(tagCondition).toArray()).map(async ({ _id }) => await articlesToTags.find({ tag: _id })));
+                    if (articleIdArrSet.length) {
+                        // 根据 tagId 拿到符合的文章 Id
+                        condition._id = { $in: [].concat(...articleIdArrSet) }
                     }
-                    return null;
-                } else {
-                    return await articles.findOne({});
+                    return [];
                 }
+
+                return await articles.find(condition).toArray();
             }
         },
         articles: {
             type: new GraphQLList(ArticleType),
             args: {
-                articleId: { type: GraphQLString },
+                _id: { type: GraphQLString },
                 text: { type: GraphQLString },
                 tagId: { type: GraphQLString },
                 tagName: { type: GraphQLString }
             },
-            resolve: async (source, { articleId, text, tagId, tagName }) => {
-                if (articleId) {
-                    return await articles.find({ _id: ObjectId(articleId) }).toArray();
-                } else if (tagId || tagName || text) {
-                    // 根据 tag text 找文章
+            resolve: async (source, { _id, text, tagId, tagName }) => {
+                // 依次添加 condition，最后统一检索
+                const condition = {};
+
+                if (_id) {
+                    condition._id = ObjectId(_id);
+                }
+
+                if (text) {
+                    condition.$text = { $search: text };
+                }
+
+                if (tagId || tagName) {
                     const tagCondition = {};
                     if (tagId) {
                         tagCondition._id = tagId;
@@ -73,37 +90,59 @@ module.exports = new GraphQLObjectType({
                     if (tagName) {
                         tagCondition.name = tagName;
                     }
-                    const tag = await tags.findOne(tagCondition);
-                    if (tag) {
-                        // 根据 tagId 查所有文章 Id
-                        return (await Promise.all((await articlesToTags.find({ tag: ObjectId(tag._id) }).toArray())
-                            // 根据所有文章 Id 查文章内容，同时通过 text 搜索
-                            .map(async ({ article }) => await articles.findOne({ _id: ObjectId(article), $text: { $search: text } }))))
-                            // 过滤空值
-                            .filter(isNotNull => isNotNull);
+
+                    const articleIdArrSet = await Promise.all((await tags.find(tagCondition).toArray()).map(async ({ _id }) => await articlesToTags.find({ tag: _id })));
+                    if (articleIdArrSet.length) {
+                        // 根据 tagId 拿到符合的文章 Id
+                        condition._id = { $in: [].concat(...articleIdArrSet) }
                     }
                     return [];
-                } else {
-                    return await articles.find({}).toArray();
                 }
+
+                return await articles.find(condition).toArray();
+            }
+        },
+        tag: {
+            type: TagType,
+            args: {
+                _id: { type: GraphQLString },
+                name: { type: GraphQLString }
+            },
+            resolve: async (source, { _id, name }) => {
+                const condition = { _id, name }.removeNull();
+                return await tags.findOne(condition);
             }
         },
         tags: {
             type: new GraphQLList(TagType),
             args: {
-                tagId: { type: GraphQLString },
-                tagName: { type: GraphQLString }
+                _id: { type: GraphQLString },
+                name: { type: GraphQLString }
             },
-            resolve: async (source, { tagId, tagName }) => {
-                const condition = {};
-                if (tagId) {
-                    condition._id = tagId;
-                }
-                if (tagName) {
-                    condition.name = tagName;
-                }
+            resolve: async (source, { _id, name }) => {
+                const condition = { _id, name }.removeNull();
                 return await tags.find(condition).toArray();
             }
+        },
+        // todo auth
+        config: {
+            type: ConfigType,
+            args: {
+                name: {
+                    type: GraphQLString,
+                },
+                avatar: {
+                    type: GraphQLString,
+                },
+                password: {
+                    type: GraphQLString,
+                }
+            },
+            resolve: async () => {
+                const configValue = await configs.findOne({});
+                return configValue;
+            }
+
         }
     }
 });
