@@ -130,6 +130,7 @@ module.exports = new GraphQLObjectType({
                 name: { type: GraphQLString },
                 avatar: { type: GraphQLString },
                 password: { type: GraphQLString },
+                profile: { type: GraphQLString },
                 token: { type: GraphQLString },
             },
             resolve: async (source, { name, avatar, password, token }, ctx) => {

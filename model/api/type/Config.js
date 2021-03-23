@@ -14,6 +14,10 @@ const Config = new GraphQLObjectType({
             type: GraphQLString,
             resolve: (source) => source.avatar
         },
+        profile: {
+            type: GraphQLString,
+            resolve: (source) => source.profile
+        },
         password: {
             type: GraphQLString,
             resolve: async (source, args, ctx) => {

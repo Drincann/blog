@@ -33,10 +33,11 @@ collections.articleCollection.createIndex(
         await collections.configCollection.insertOne({
             password: 'gaolihai',
             name: '高厉害',
-            avatar: ''
+            avatar: '',
+            profile: '',
         });
     }
-})()
+})();
 
 // 重用获取密码的方法
 async function getPassword() {
