@@ -62,7 +62,7 @@ module.exports = new GraphQLObjectType({
                     return [];
                 }
 
-                return await articles.find(condition).toArray();
+                return await articles.findOne(condition);
             }
         },
         articles: {
