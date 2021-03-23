@@ -9,6 +9,7 @@ const ArticleType = require('./type/Article');
 const ConfigType = require('./type/Config');
 
 const {
+    getPassword,
     client,
     collections: {
         articleCollection: articles,
@@ -19,7 +20,6 @@ const {
 } = require('../db');
 
 const { ObjectId } = require('mongodb');
-const config = require('../../config');
 
 module.exports = new GraphQLObjectType({
     name: 'blogMutation',
@@ -31,9 +31,17 @@ module.exports = new GraphQLObjectType({
                 title: { type: GraphQLString },
                 content: { type: GraphQLString },
                 tagIdList: { type: new GraphQLList(GraphQLString) },
-                tagNameList: { type: new GraphQLList(GraphQLString) }
+                tagNameList: { type: new GraphQLList(GraphQLString) },
+                token: { type: GraphQLString },
             },
-            resolve: async (source, { _id, title, content, tagIdList, tagNameList }) => {
+            resolve: async (source, { _id, title, content, tagIdList, tagNameList, token }, ctx) => {
+                // 验证
+                if (!ctx.auth) {
+                    if (!token || token === '' || token !== await getPassword()) {
+                        throw new Error('没有操作权限');
+                    }
+                    ctx.auth = true;
+                }
                 // 开启事务
                 const session = client.startSession();
                 try {
@@ -89,9 +97,17 @@ module.exports = new GraphQLObjectType({
             type: TagType,
             args: {
                 _id: { type: GraphQLString },
-                name: { type: GraphQLString }
+                name: { type: GraphQLString },
+                token: { type: GraphQLString },
             },
-            resolve: async (source, { _id, name }) => {
+            resolve: async (source, { _id, name, token }, ctx) => {
+                // 验证
+                if (!ctx.auth) {
+                    if (!token || token === '' || token !== await getPassword()) {
+                        throw new Error('没有操作权限');
+                    }
+                    ctx.auth = true;
+                }
                 let upserted = null;
                 if (_id) {
                     if (name) {
@@ -108,24 +124,25 @@ module.exports = new GraphQLObjectType({
                 return upserted;
             }
         },
-        // todo auth
         config: {
             type: ConfigType,
             args: {
-                name: {
-                    type: GraphQLString,
-                },
-                avatar: {
-                    type: GraphQLString,
-                },
-                password: {
-                    type: GraphQLString,
-                }
+                name: { type: GraphQLString },
+                avatar: { type: GraphQLString },
+                password: { type: GraphQLString },
+                token: { type: GraphQLString },
             },
-            resolve: async (source, { name, avatar, password }) => {
+            resolve: async (source, { name, avatar, password, token }, ctx) => {
+                // 验证
+                if (!ctx.auth) {
+                    if (!token || token === '' || token !== await getPassword()) {
+                        throw new Error('没有操作权限');
+                    }
+                    ctx.auth = true;
+                }
                 const updater = { name, avatar, password }.removeNull();
-                const updateId = (await configs.updateOne({}, { $set: updater })).upsertedId;
-                return await configs.findOne({ _id: updateId });
+                await configs.updateOne({}, { $set: updater });
+                return await configs.findOne({});
             }
         }
     }

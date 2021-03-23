@@ -9,12 +9,15 @@ const ConfigType = require('./type/Config');
 const ArticleType = require('./type/Article');
 // const ConfigType = require('./type/Config');
 
-const { collections: {
-    articleCollection: articles,
-    tagCollection: tags,
-    articlesToTagsCollection: articlesToTags,
-    configCollection: configs
-} } = require('../db');
+const {
+    getPassword,
+    collections: {
+        articleCollection: articles,
+        tagCollection: tags,
+        articlesToTagsCollection: articlesToTags,
+        configCollection: configs
+    }
+} = require('../db');
 
 const { ObjectId } = require('mongodb');
 
@@ -124,25 +127,22 @@ module.exports = new GraphQLObjectType({
                 return await tags.find(condition).toArray();
             }
         },
-        // todo auth
         config: {
             type: ConfigType,
             args: {
-                name: {
-                    type: GraphQLString,
-                },
-                avatar: {
-                    type: GraphQLString,
-                },
-                password: {
-                    type: GraphQLString,
-                }
+                token: { type: GraphQLString }
             },
-            resolve: async () => {
-                const configValue = await configs.findOne({});
-                return configValue;
-            }
+            resolve: async (source, { token }, ctx) => {
+                // 验证
+                if (!ctx.auth) {
+                    if (!token || token === '' || token !== await getPassword()) {
+                        throw new Error('没有操作权限');
+                    }
+                    ctx.auth = true;
+                }
 
+                return await configs.findOne({});
+            }
         }
     }
 });

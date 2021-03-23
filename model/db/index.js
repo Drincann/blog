@@ -24,8 +24,27 @@ const collections = {
 // init
 collections.articleCollection.createIndex(
     { title: 'text', content: 'text' }
-)
+);
+
+
+// 如果网站 config 不存在，则新建一个默认的
+(async () => {
+    if ((await collections.configCollection.find().toArray()).length === 0) {
+        await collections.configCollection.insertOne({
+            password: 'gaolihai',
+            name: '高厉害',
+            avatar: ''
+        });
+    }
+})()
+
+// 重用获取密码的方法
+async function getPassword() {
+    return (await collections.configCollection.findOne({})).password;
+}
+
 
 module.exports = {
-    client, db, collections
+    client, db, collections,
+    getPassword
 };

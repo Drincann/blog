@@ -16,7 +16,13 @@ const Config = new GraphQLObjectType({
         },
         password: {
             type: GraphQLString,
-            resolve: (source, args, ctx) => source.password
+            resolve: async (source, args, ctx) => {
+                // 验证
+                if (!ctx.auth) {
+                    throw new Error('没有操作权限');
+                }
+                return source.password;
+            }
         }
     }
 });
