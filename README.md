@@ -420,3 +420,186 @@ mongodb 的 connect api 是异步的，这会导致一个很严重的问题。
 
 目前整体路由及中间件架构已经确定，完成了部分 graphql 查询，发现数据层接口有点问题，缺少直接返回单个结果的接口，让上传的代码有些臃肿，所以明天改一下。
 
+
+
+
+
+## 2021.03.22
+
+#### 进度
+
+发现数据层没必要做封装，graphql 层越写需求越多，封装的数据层接口反而限制发挥，直接提供 mongodb api 给 graphql 层调用就好了。
+
+之所以做出这个决定，是因为在插入文章的时候需要用到事务。然后发现事务不能在 mongodb 单点服务端上使用，必须配置副本集、或集群（分片），于是配置了一波副本集。
+
+今天还学了一波 mutation，发现跟 query 几乎没有任何区别，仅作为提供语义。
+
+
+
+## 2021.03.23
+
+#### 进度
+
+mongodb 穷人版不支持中文文本索引，我看实现全文检索的最佳方式是配合 Elasticsearch，暂时留个 todo，先使用 mongodb 自带的文本索引，考虑文章量小的情况下直接正则匹配，留个接口，之后再折腾。
+
+准备实现身份认证，由于是单用户，不考虑 session、jwt 了，准备手动设计一个非常简单的机制。
+
+目前是这样想的，对特权接口，要求传递 token 参数，前端使用 localstorage 存储 token，状态交给前端保持，后端没有认证耦合，这有那么一丢丢类似 jwt（就一丢丢）。
+
+
+
+## GraphQL 接口文档
+
+### 类型
+
+```
+type Tag {
+    _id,
+    name
+}
+
+type Article {
+    title: string,
+    content: string,
+    createAt: number,
+    updateAt: number,
+    tag: Tag[]
+}
+
+type Config {
+    name: string,
+    password: string,
+    avatar: string
+}
+```
+
+
+
+### QuerySchema
+
+#### 单个文章查询
+
+```
+query {
+    article(
+        _id: string,
+        text: string,
+        tagId: sting,
+        tagName: string
+    ): Article
+}
+```
+
+#### 多个文章查询
+
+```
+query {
+    articles(
+        _id: string,
+        text: string,
+        tagId: sting,
+        tagName: string
+    ): Article[]
+}
+```
+
+#### 单个标签查询
+
+```
+query {
+    tag(
+        _id: string,
+        name: string
+    ): Tag
+}
+```
+
+#### 多个标签查询
+
+```
+query {
+    tags(
+        _id: string,
+        name: string
+    ): Tag[]
+}
+```
+
+#### 网站配置查询
+
+要获取 password 字段时需要传入 token，否则会报错，该 token 的值是当前 password。
+
+```
+query {
+    config(
+        token: string
+    ): Config
+}
+```
+
+
+
+### MutationSchema
+
+#### 单个文章修改/添加
+
+该接口是特权接口，需要传入 token 参数。
+
+修改和添加取决于是否指定了 _id，若指定则语义为修改，否则为添加。
+
+修改时，所有参数可选。
+
+添加时，title 和 content 必选，tagNameList 和 tagIdList 可选，选择时为二选一。
+
+```
+mutation {
+    article(
+        _id: string,
+        title: string,
+        content: string,
+        tagIdList: string[],
+        tagNameList: string[],
+        token: string
+    ): Article
+}
+```
+
+#### 单个标签修改/添加
+
+该接口是特权接口，需要传入 token 参数。
+
+修改和添加取决于是否指定了 _id，若指定则语义为修改，否则为添加。
+
+修改时，所有参数可选。
+
+添加时，name 必选。
+
+```
+mutation {
+    tag(
+        _id: string,
+        name: string
+    ): Tag
+}
+```
+
+#### 网站配置更改
+
+该接口是特权接口，需要传入 token 参数。
+
+token 必选，其余可选。
+
+```
+mutation {
+    config(
+        name: string,
+        avatar: string,
+        password: string,
+        token: string
+    ): Config
+}
+```
+
+
+
+#### 
