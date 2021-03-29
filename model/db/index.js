@@ -22,9 +22,15 @@ const collections = {
 }
 
 // init
+// 创建全文索引
 collections.articleCollection.createIndex(
     { title: 'text', content: 'text' }
 );
+// 创建唯一索引
+collections.tagCollection.createIndex(
+    { 'name': 1 }, { unique: true }
+);
+
 
 
 // 如果网站 config 不存在，则新建一个默认的
