@@ -20,7 +20,7 @@ module.exports = (dbUrl, callback) => {
         this.collection.insertMany({})
         const result = await this.collection.updateOne({},)
         result.modifiedCount
-        return Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             this.collection.insertOne({ name }, (err, result) => {
                 if (err) {
                     reject(err);
